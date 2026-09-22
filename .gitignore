@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Model / HF caches
+.cache/
+models/
+server/.cache/
+
+# Runtime
+out/
+tmp/
+*.wav
+*.mp3
+*.m4a
+*.webm
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+ios/Pods/
+android/.gradle/
+
+# Web
+node_modules/
+.next/
+dist/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
