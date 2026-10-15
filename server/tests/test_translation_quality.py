@@ -116,3 +116,9 @@ def test_no_arbitrary_number_insertion():
     result = router.translate("قیمت ۵۰ دلار است", "fa", "en")
     assert "60" in result.text
     assert result.needs_review
+
+from app.ai.quality_fixtures import fixture_checks
+
+def test_curated_six_route_reference_fixtures():
+    for case, warnings in fixture_checks():
+        assert not warnings, (case, warnings)
