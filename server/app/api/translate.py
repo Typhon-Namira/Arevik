@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import base64
-import hmac
-import os
 import shutil
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Header
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Depends
 from fastapi.concurrency import run_in_threadpool
 
 from app.ai.pipeline import pipeline
+from app.auth import require_user
 from app.config import settings
 
 MAX_UPLOAD_BYTES = 15 * 1024 * 1024
@@ -24,13 +23,8 @@ async def translate_file(
     file: UploadFile = File(...),
     source_language: str = Form(...),
     target_language: str = Form(...),
-    authorization: str | None = Header(default=None),
+    user_id: int = Depends(require_user),
 ) -> dict:
-    token = os.getenv("AREVIK_MOBILE_API_TOKEN", "")
-    if token:
-        presented = authorization.removeprefix("Bearer ") if authorization else ""
-        if not hmac.compare_digest(presented, token):
-            raise HTTPException(status_code=401, detail="Invalid API token")
     if source_language not in {"en", "hy"} or target_language not in {"en", "hy"}:
         raise HTTPException(status_code=400, detail="V1 supports only en and hy")
     if source_language == target_language:
