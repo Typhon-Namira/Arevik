@@ -105,7 +105,7 @@ class QualityRouter:
         def evaluate(engine: str, route: str, output: str) -> None:
             normalized = normalize(output, target)
             warns = assess(clean, normalized, source, target)
-            candidates.append(QualityResult(normalized, engine, route, warns, bool(warns)))
+            candidates.append(QualityResult(text=normalized, model=engine, route=route, warnings=warns, needs_review=bool(warns)))
 
         primary = self.engines[self.direct_engine]
         evaluate(self.direct_engine, "direct", primary(clean, source, target))
