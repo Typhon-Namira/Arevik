@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from typing import Callable
 
 from app.ai.terminology import repair_language_learning
+from app.ai.numeric_fidelity import number_warnings
 
 LANGUAGES = frozenset({"en", "hy", "fa"})
 # This is deliberately small and curated. Expand only with human-reviewed entries.
@@ -81,6 +82,7 @@ def assess(source: str, output: str, source_lang: str, target_lang: str) -> tupl
         aliases = TARGET_ALIASES[term].get(target_lang, ())
         if aliases and not any(_has(output, a, target_lang) for a in aliases):
             warnings.append("missing_entity:" + term)
+    warnings.extend(number_warnings(source, output))
     # Distinguish a detectable error from an uncertain translation.
     if source_lang != target_lang and source.strip() == output.strip():
         warnings.append("unchanged_output")
