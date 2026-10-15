@@ -16,8 +16,11 @@ def _router() -> QualityRouter:
         raise RuntimeError("CT2 quality translation is disabled")
     from app.ai.translation_backends import M2M100CT2, MadladCT2
     m2m = Path(settings.m2m100_model_dir)
-    madlad = Path(settings.madlad_model_dir)
-    if not (m2m / "model.bin").is_file() or not (madlad / "model.bin").is_file():
+    madlad = Path(settings.madlad_model_dir) if settings.madlad_model_dir else None
+    if madlad is None:
+        snapshots = sorted(Path("/opt/arevik/cache/huggingface/hub/models--Nextcloud-AI--madlad400-3b-mt-ct2-int8/snapshots").glob("*"))
+        madlad = next((p for p in snapshots if (p / "model.bin").is_file()), None)
+    if not (m2m / "model.bin").is_file() or madlad is None or not (madlad / "model.bin").is_file():
         raise RuntimeError("Configured CT2 model directories are unavailable")
     return QualityRouter(
         engines={"m2m100": M2M100CT2(m2m), "madlad": MadladCT2(madlad)},
