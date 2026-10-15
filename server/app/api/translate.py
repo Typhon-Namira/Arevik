@@ -25,8 +25,8 @@ async def translate_file(
     target_language: str = Form(...),
     user_id: int = Depends(require_user),
 ) -> dict:
-    if source_language not in {"en", "hy"} or target_language not in {"en", "hy"}:
-        raise HTTPException(status_code=400, detail="V1 supports only en and hy")
+    if source_language not in {"en", "hy", "fa"} or target_language not in {"en", "hy"}:
+        raise HTTPException(status_code=400, detail="Supported languages: en, hy, fa")
     if source_language == target_language:
         raise HTTPException(status_code=400, detail="Source and target must differ")
 
