@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
     translation_en_hy: str = "Helsinki-NLP/opus-mt-en-hy"
     translation_hy_en: str = "Helsinki-NLP/opus-mt-hy-en"
-    translation_engine: str = "opus"
+    translation_engine: str = "ct2_quality"
     m2m100_model_dir: str = "/opt/arevik/cache/huggingface/converted/m2m100-418m-int8"
     madlad_model_dir: str = ""
 
