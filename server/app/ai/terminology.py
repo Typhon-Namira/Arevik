@@ -38,6 +38,11 @@ def repair_language_learning(source_text: str, output: str, source: str, target:
     expected = learning_intent(source_text, source)
     if not expected or target not in ("hy", "fa"):
         return Repair(output)
+    # Require the target to preserve the learning predicate as well.
+    if target == "hy" and ("սովոր" not in output or len(re.findall(r"[։.!?]", output)) > 1):
+        return Repair(output)
+    if target == "fa" and ("یاد" not in output and "آموز" not in output or len(re.findall(r"[.!?؟]", output)) > 1):
+        return Repair(output)
     words = LANGUAGE_WORDS[target]
     correct = words[expected]
     # Already correct: no editing, even if the output also contains another name.
