@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from app.rate_limit import rate_limit
 from app.api.auth import router as auth_router
 
 from app.api.health import router as health_router
@@ -10,6 +11,8 @@ app = FastAPI(
     version="0.1.0",
     description="CPU-first English ↔ Armenian speech translation backend.",
 )
+
+app.middleware('http')(rate_limit)
 
 app.include_router(health_router)
 app.include_router(auth_router)
