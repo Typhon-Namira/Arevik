@@ -10,6 +10,8 @@ import unicodedata
 from dataclasses import dataclass, field
 from typing import Callable
 
+from app.ai.terminology import repair_language_learning
+
 LANGUAGES = frozenset({"en", "hy", "fa"})
 # This is deliberately small and curated. Expand only with human-reviewed entries.
 GLOSSARY: dict[str, dict[str, str]] = {
@@ -67,6 +69,7 @@ class QualityResult:
     agreement: bool | None = None
     warnings: tuple[str, ...] = ()
     needs_review: bool = False
+    repairs: tuple[str, ...] = ()
 
 def assess(source: str, output: str, source_lang: str, target_lang: str) -> tuple[str, ...]:
     warnings: list[str] = []
@@ -104,8 +107,15 @@ class QualityRouter:
         candidates: list[QualityResult] = []
         def evaluate(engine: str, route: str, output: str) -> None:
             normalized = normalize(output, target)
+            repair = repair_language_learning(clean, normalized, source, target)
+            normalized = repair.text
             warns = assess(clean, normalized, source, target)
-            candidates.append(QualityResult(text=normalized, model=engine, route=route, warnings=warns, needs_review=bool(warns)))
+            repairs = (repair.reason,) if repair.applied and repair.reason else ()
+            # Keep an audit flag: lexical repair alone does not certify translation.
+            candidates.append(QualityResult(
+                text=normalized, model=engine, route=route,
+                warnings=warns, needs_review=bool(warns or repairs), repairs=repairs,
+            ))
 
         primary = self.engines[self.direct_engine]
         evaluate(self.direct_engine, "direct", primary(clean, source, target))
@@ -135,6 +145,7 @@ class QualityRouter:
                 route=selected.route,
                 agreement=agreement,
                 warnings=tuple(dict.fromkeys((*selected.warnings, *extra))),
-                needs_review=bool(selected.warnings or extra),
+                needs_review=bool(selected.warnings or extra or selected.repairs),
+                repairs=selected.repairs,
             )
         return selected
