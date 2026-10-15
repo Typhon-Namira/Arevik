@@ -1,5 +1,7 @@
 from fastapi.testclient import TestClient
 from app.main import app
+from app.auth import require_user
+app.dependency_overrides[require_user] = lambda: 1
 from app.config import settings
 
 client = TestClient(app)
