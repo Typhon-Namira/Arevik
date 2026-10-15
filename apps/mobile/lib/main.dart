@@ -31,6 +31,7 @@ class _InterpreterScreenState extends State<InterpreterScreen> {
   final _player = AudioPlayer();
   final _server = TextEditingController(text: const String.fromEnvironment(
     'AREVIK_API_URL', defaultValue: 'http://10.0.2.2:8000'));
+  final _accessToken = TextEditingController();
   String source = 'en';
   String target = 'hy';
   String stage = 'Ready';
@@ -45,6 +46,7 @@ class _InterpreterScreenState extends State<InterpreterScreen> {
   @override
   void dispose() {
     _server.dispose();
+    _accessToken.dispose();
     _recorder.dispose();
     _player.dispose();
     super.dispose();
@@ -78,8 +80,11 @@ class _InterpreterScreenState extends State<InterpreterScreen> {
       if (url.scheme != 'https' && !(url.host == '10.0.2.2' || url.host == '127.0.0.1' || url.host == 'localhost')) {
         throw StateError('Use HTTPS for remote servers.');
       }
-      final request = http.MultipartRequest('POST', url)
-        ..fields['source_language'] = source
+      final request = http.MultipartRequest('POST', url);
+      if (_accessToken.text.trim().isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer ${_accessToken.text.trim()}';
+      }
+      request.fields['source_language'] = source
         ..fields['target_language'] = target
         ..files.add(await http.MultipartFile.fromPath('file', path, filename: 'recording.wav'));
       final streamed = await request.send().timeout(const Duration(seconds: 90));
@@ -139,6 +144,11 @@ class _InterpreterScreenState extends State<InterpreterScreen> {
             decoration: const InputDecoration(labelText: 'API base URL',
               hintText: 'https://your-server.example', border: OutlineInputBorder()),
             keyboardType: TextInputType.url),
+          const SizedBox(height: 8),
+          TextField(controller: _accessToken, obscureText: true,
+            enabled: !recording && !processing,
+            decoration: const InputDecoration(labelText: 'Session access token (optional)',
+              border: OutlineInputBorder())),
           const SizedBox(height: 8),
           const Text('For Android emulator use 10.0.2.2 with an SSH tunnel. '
             'Real phones require an authenticated HTTPS endpoint.',
