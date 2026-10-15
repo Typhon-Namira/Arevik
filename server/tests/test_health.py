@@ -12,4 +12,4 @@ def test_health() -> None:
     payload = response.json()
     assert payload["status"] == "ok"
     assert payload["mode"] == "cpu-local"
-    assert payload["languages"] == ["en", "hy"]
+    assert payload["languages"] == ["en", "hy", "fa"]
