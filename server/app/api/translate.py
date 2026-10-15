@@ -5,11 +5,15 @@ import shutil
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, Depends
 from fastapi.concurrency import run_in_threadpool
 
 from app.ai.pipeline import pipeline
+from app.auth import require_user
 from app.config import settings
+
+MAX_UPLOAD_BYTES = 15 * 1024 * 1024
+UPLOAD_CHUNK_BYTES = 1024 * 1024
 
 router = APIRouter(prefix="/api/v1/translate", tags=["Translation"])
 
@@ -19,9 +23,10 @@ async def translate_file(
     file: UploadFile = File(...),
     source_language: str = Form(...),
     target_language: str = Form(...),
+    user_id: int = Depends(require_user),
 ) -> dict:
-    if source_language not in {"en", "hy"} or target_language not in {"en", "hy"}:
-        raise HTTPException(status_code=400, detail="V1 supports only en and hy")
+    if source_language not in {"en", "hy", "fa"} or target_language not in {"en", "hy"}:
+        raise HTTPException(status_code=400, detail="Supported languages: en, hy, fa")
     if source_language == target_language:
         raise HTTPException(status_code=400, detail="Source and target must differ")
 
@@ -33,8 +38,15 @@ async def translate_file(
     output_path = request_dir / "translated.wav"
 
     try:
+        received = 0
         with input_path.open("wb") as destination:
-            shutil.copyfileobj(file.file, destination)
+            while chunk := await file.read(UPLOAD_CHUNK_BYTES):
+                received += len(chunk)
+                if received > MAX_UPLOAD_BYTES:
+                    raise HTTPException(status_code=413, detail="Audio file exceeds 15 MiB limit")
+                destination.write(chunk)
+        if received == 0:
+            raise HTTPException(status_code=400, detail="Empty audio file")
 
         result = await run_in_threadpool(
             pipeline.run,
@@ -58,3 +70,4 @@ async def translate_file(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     finally:
         await file.close()
+        shutil.rmtree(request_dir, ignore_errors=True)

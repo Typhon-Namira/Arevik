@@ -11,18 +11,18 @@ def health() -> dict:
         "status": "ok",
         "service": "arevik-server",
         "mode": "cpu-local",
-        "languages": ["en", "hy"],
+        "languages": ["en", "hy", "fa"],
         "stt": {
             "provider": "faster-whisper",
             "model": settings.stt_model,
             "compute_type": settings.stt_compute_type,
         },
         "translation": {
-            "provider": "local-opus-mt",
-            "pairs": ["en->hy", "hy->en"],
+            "provider": "m2m100-madlad-ct2-quality",
+            "pairs": ["en->hy", "hy->en", "en->fa", "fa->en", "hy->fa", "fa->hy"],
         },
         "tts": {
-            "provider": settings.tts_engine,
-            "quality": "baseline",
+            "provider": "speecht5-hy/espeak-en-fa",
+            "quality": "experimental-voice-not-reviewed",
         },
     }
