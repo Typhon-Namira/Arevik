@@ -196,8 +196,8 @@ class _InterpreterScreenState extends State<InterpreterScreen> {
         onPressed: spokenFile == null ? null : () => _player.play(DeviceFileSource(spokenFile!)),
         icon: const Icon(Icons.volume_up), label: const Text('Replay translation')),
       const SizedBox(height: 15),
-      const Text('Persian, paired sessions, and live streaming are being integrated. '
-        'This prototype currently uses the existing English–Armenian file API.',
+      const Text('Paired sessions and live streaming are being integrated. '
+        'Speech translation supports English, Armenian and Persian after backend deployment.',
         style: TextStyle(color: Colors.black54, fontSize: 12)),
       ],
     ])),
@@ -209,6 +209,7 @@ class _InterpreterScreenState extends State<InterpreterScreen> {
       items: const [
         DropdownMenuItem(value: 'en', child: Text('English')),
         DropdownMenuItem(value: 'hy', child: Text('Armenian')),
+        DropdownMenuItem(value: 'fa', child: Text('Persian')),
       ], onChanged: recording || processing ? null : onChanged);
 
   Widget _resultCard(String title, String body) =>
