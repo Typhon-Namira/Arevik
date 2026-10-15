@@ -5,8 +5,8 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from app.ai.stt import stt
-from app.ai.translation import translator
-from app.ai.tts import EspeakTTS
+from app.ai.quality_gateway import translate_text
+from app.ai.multilingual_tts import MultilingualTTS
 
 
 @dataclass
@@ -34,7 +34,7 @@ class SpeechTranslationResult:
 
 class SpeechToSpeechPipeline:
     def __init__(self) -> None:
-        self._tts: EspeakTTS | None = None
+        self._tts: MultilingualTTS | None = None
 
     @property
     def tts(self) -> EspeakTTS:
@@ -51,7 +51,7 @@ class SpeechToSpeechPipeline:
     ) -> SpeechTranslationResult:
         if source_language == target_language:
             raise ValueError("Source and target languages must be different")
-        if not translator.supported(source_language, target_language):
+        if source_language not in {"en","hy","fa"} or target_language not in {"en","hy","fa"}:
             raise ValueError(
                 f"Unsupported language pair: {source_language}->{target_language}"
             )
@@ -65,11 +65,8 @@ class SpeechToSpeechPipeline:
             raise ValueError("No speech was detected in the input audio")
 
         stage = time.perf_counter()
-        translated_text = translator.translate(
-            source_text,
-            source_language,
-            target_language,
-        )
+        quality = translate_text(source_text, source_language, target_language)
+        translated_text = quality.text
         translation_ms = round((time.perf_counter() - stage) * 1000)
         if not translated_text:
             raise RuntimeError("Translation returned empty text")
