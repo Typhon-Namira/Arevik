@@ -5,6 +5,7 @@ from app.rate_limit import LIMITS
 
 def test_login_throttling(tmp_path, monkeypatch):
     monkeypatch.setattr(auth, "DB_PATH", tmp_path / "auth.sqlite3")
+    original_overrides = dict(app.dependency_overrides)
     app.dependency_overrides.clear()
     client = TestClient(app)
     for i in range(LIMITS["/api/v1/auth/login"][0]):
@@ -17,3 +18,5 @@ def test_login_throttling(tmp_path, monkeypatch):
     })
     assert blocked.status_code == 429
     assert "Retry-After" in blocked.headers
+    app.dependency_overrides.clear()
+    app.dependency_overrides.update(original_overrides)
