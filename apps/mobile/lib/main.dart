@@ -318,6 +318,23 @@ class _InterpreterScreenState extends State<InterpreterScreen> {
     appBar: AppBar(title: const Text('Arevik AI'), centerTitle: false,
       backgroundColor: Colors.transparent),
     body: SafeArea(child: ListView(padding: const EdgeInsets.all(20), children: [
+      if (!_authenticated) ...[
+        const Text('Sign in', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        TextField(controller: _email, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder())),
+        const SizedBox(height: 10),
+        TextField(controller: _password, obscureText: true,
+          decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder())),
+        const SizedBox(height: 10),
+        TextField(controller: _server,
+          decoration: const InputDecoration(labelText: 'HTTPS API URL', border: OutlineInputBorder())),
+        const SizedBox(height: 12),
+        FilledButton(onPressed: processing ? null : () => _login(), child: const Text('Sign in')),
+        OutlinedButton(onPressed: processing ? null : () => _login(register: true), child: const Text('Create account')),
+        if (error != null) Text(error!, style: const TextStyle(color: Colors.red)),
+      ] else ...[
+        Align(alignment: Alignment.centerRight,
+          child: TextButton(onPressed: _logout, child: const Text('Sign out'))),
       const Text('Understand each other.', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
       const SizedBox(height: 5),
       const Text('Early MVP • Push-to-talk translation', style: TextStyle(color: Colors.black54)),
@@ -342,10 +359,7 @@ class _InterpreterScreenState extends State<InterpreterScreen> {
               hintText: 'https://your-server.example', border: OutlineInputBorder()),
             keyboardType: TextInputType.url),
           const SizedBox(height: 8),
-          TextField(controller: _accessToken, obscureText: true,
-            enabled: !recording && !processing,
-            decoration: const InputDecoration(labelText: 'Session access token (optional)',
-              border: OutlineInputBorder())),
+          const Text('Authenticated session active'),
           const SizedBox(height: 8),
           const Text('For Android emulator use 10.0.2.2 with an SSH tunnel. '
             'Real phones require an authenticated HTTPS endpoint.',
@@ -378,6 +392,7 @@ class _InterpreterScreenState extends State<InterpreterScreen> {
       const Text('Persian, paired sessions, and live streaming are being integrated. '
         'This prototype currently uses the existing English–Armenian file API.',
         style: TextStyle(color: Colors.black54, fontSize: 12)),
+      ],
     ])),
   );
 
