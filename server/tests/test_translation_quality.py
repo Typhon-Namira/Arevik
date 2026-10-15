@@ -45,3 +45,14 @@ def test_six_routes_accept():
             if src != dst:
                 q = QualityRouter(engines={"m2m100": lambda t,s,d: "hello"}, fallback_engine=None)
                 assert q.translate("hello", src, dst).text == "hello"
+
+def test_two_wrong_models_mark_disagreement_and_review():
+    router = QualityRouter(engines={
+        "m2m100": lambda text, source, target: "Ես սովորում եմ անգլերեն։",
+        "madlad": lambda text, source, target: "Ես ադրբեջաներեն եմ սովորում։",
+    })
+    result = router.translate("I am learning Armenian.", "en", "hy")
+    assert result.needs_review
+    assert "missing_entity:armenian language" in result.warnings
+    assert "model_disagreement" in result.warnings
+    assert result.agreement is False
