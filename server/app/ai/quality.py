@@ -119,7 +119,7 @@ class QualityRouter:
 
         primary = self.engines[self.direct_engine]
         evaluate(self.direct_engine, "direct", primary(clean, source, target))
-        if candidates[0].warnings and self.fallback_engine and self.fallback_engine in self.engines and self.fallback_engine != self.direct_engine:
+        if candidates[0].needs_review and self.fallback_engine and self.fallback_engine in self.engines and self.fallback_engine != self.direct_engine:
             try:
                 evaluate(self.fallback_engine, "direct", self.engines[self.fallback_engine](clean, source, target))
             except Exception:
