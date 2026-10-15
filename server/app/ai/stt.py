@@ -24,7 +24,7 @@ class LocalWhisperSTT:
         )
 
     def transcribe(self, audio_path: str | Path, language: str) -> str:
-        if language not in {"en", "hy"}:
+        if language not in {"en", "hy", "fa"}:
             raise ValueError(f"Unsupported STT language: {language}")
 
         segments, _ = self.model.transcribe(
