@@ -37,9 +37,9 @@ class SpeechToSpeechPipeline:
         self._tts: MultilingualTTS | None = None
 
     @property
-    def tts(self) -> EspeakTTS:
+    def tts(self) -> MultilingualTTS:
         if self._tts is None:
-            self._tts = EspeakTTS()
+            self._tts = MultilingualTTS()
         return self._tts
 
     def run(
