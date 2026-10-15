@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from app.api.health import router as health_router
 from app.api.translate import router as translate_router
+from app.api.text_translate import router as text_router
 
 app = FastAPI(
     title="Arevik Realtime Translation Engine",
@@ -11,6 +12,7 @@ app = FastAPI(
 
 app.include_router(health_router)
 app.include_router(translate_router)
+app.include_router(text_router)
 
 
 @app.get("/")
