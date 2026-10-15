@@ -85,3 +85,34 @@ def test_persian_language_repair():
     r = repair_language_learning("I am learning Armenian.", "من انگلیسی یاد می گیرم.", "en", "fa")
     assert r.applied
     assert r.text == "من ارمنی یاد می گیرم."
+
+from app.ai.numeric_fidelity import numeric_tokens, number_warnings
+
+def test_persian_digits_preserved_across_script():
+    assert number_warnings("قیمت ۱۲۵ دلار است", "The price is 125 dollars.") == ()
+
+def test_changed_quantity_flagged():
+    assert "numeric_value_missing_or_changed" in assess(
+        "I need 15 tickets.", "Ես ուզում եմ 50 տոմս։", "en", "hy"
+    )
+
+def test_number_with_grouping():
+    assert numeric_tokens("1,200") == numeric_tokens("۱۲۰۰")
+
+def test_number_can_trigger_fallback():
+    router = QualityRouter(engines={
+        "m2m100": lambda t,s,d: "The price is 60 dollars.",
+        "madlad": lambda t,s,d: "The price is 50 dollars.",
+    })
+    result = router.translate("قیمت ۵۰ دلار است", "fa", "en")
+    assert result.model == "madlad"
+    assert "numeric_value_missing_or_changed" not in result.warnings
+
+def test_no_arbitrary_number_insertion():
+    router = QualityRouter(
+        engines={"m2m100": lambda t,s,d: "It costs 60 dollars."},
+        fallback_engine=None,
+    )
+    result = router.translate("قیمت ۵۰ دلار است", "fa", "en")
+    assert "60" in result.text
+    assert result.needs_review
