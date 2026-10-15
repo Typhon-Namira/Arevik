@@ -64,6 +64,7 @@ class QualityResult:
     text: str
     model: str
     route: str
+    agreement: bool | None = None
     warnings: tuple[str, ...] = ()
     needs_review: bool = False
 
@@ -121,4 +122,19 @@ class QualityRouter:
             except Exception:
                 pass
         # Heuristic selection only: never call this proof of semantic accuracy.
-        return min(candidates, key=lambda c: (len(c.warnings), c.route != "direct", c.model != self.direct_engine))
+        selected = min(candidates, key=lambda c: (len(c.warnings), c.route != "direct", c.model != self.direct_engine))
+        # A known missing entity is never cleared by a tie between flawed models.
+        # Keep the diagnostic and expose conflicting translations explicitly.
+        if len(candidates) > 1:
+            normalized_outputs = {c.text.casefold().strip() for c in candidates}
+            agreement = len(normalized_outputs) == 1
+            extra = ("model_disagreement",) if not agreement else ()
+            selected = QualityResult(
+                text=selected.text,
+                model=selected.model,
+                route=selected.route,
+                agreement=agreement,
+                warnings=tuple(dict.fromkeys((*selected.warnings, *extra))),
+                needs_review=bool(selected.warnings or extra),
+            )
+        return selected
