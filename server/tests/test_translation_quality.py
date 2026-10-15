@@ -53,6 +53,35 @@ def test_two_wrong_models_mark_disagreement_and_review():
     })
     result = router.translate("I am learning Armenian.", "en", "hy")
     assert result.needs_review
-    assert "missing_entity:armenian language" in result.warnings
-    assert "model_disagreement" in result.warnings
+    assert result.text == "Ես սովորում եմ հայերեն։"
+    assert result.repairs == ("single_language_term_repaired",)
+    assert "missing_entity:armenian language" not in result.warnings
     assert result.agreement is False
+
+from app.ai.terminology import repair_language_learning
+
+def test_madlad_wrong_azerbaijani_is_repaired_in_narrow_context():
+    r = repair_language_learning("I am learning Armenian.", "Ես ադրբեջաներեն եմ սովորում։", "en", "hy")
+    assert r.applied
+    assert r.text == "Ես հայերեն եմ սովորում։"
+
+def test_multi_language_source_is_not_automatically_rewritten():
+    r = repair_language_learning("I am learning Armenian and English.", "Ես սովորում եմ անգլերեն։", "en", "hy")
+    assert not r.applied
+
+def test_quotation_is_not_automatically_rewritten():
+    r = repair_language_learning('She said "I am learning Armenian".', "Ես սովորում եմ անգլերեն։", "en", "hy")
+    assert not r.applied
+
+def test_ambiguous_multiple_target_languages_is_not_rewritten():
+    r = repair_language_learning("I am learning Armenian.", "Ես սովորում եմ անգլերեն և պարսկերեն։", "en", "hy")
+    assert not r.applied
+
+def test_correct_term_not_changed():
+    r = repair_language_learning("I am learning Armenian.", "Ես հայերեն եմ սովորում։", "en", "hy")
+    assert not r.applied
+
+def test_persian_language_repair():
+    r = repair_language_learning("I am learning Armenian.", "من انگلیسی یاد می گیرم.", "en", "fa")
+    assert r.applied
+    assert r.text == "من ارمنی یاد می گیرم."
