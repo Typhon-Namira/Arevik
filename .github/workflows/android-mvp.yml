@@ -1,0 +1,46 @@
+name: Android MVP APK
+on:
+  push:
+    branches:
+      - feature/shared-translation-quality-layer
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/android-mvp.yml'
+  workflow_dispatch:
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Create Android runner
+        working-directory: apps/mobile
+        run: flutter create --platforms=android --project-name arevik_mobile .
+      - name: Set Android microphone permission
+        working-directory: apps/mobile
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          f = Path('android/app/src/main/AndroidManifest.xml')
+          t = f.read_text()
+          t = t.replace('<application', '<uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <application', 1)
+          f.write_text(t)
+          PY
+      - name: Dependencies
+        working-directory: apps/mobile
+        run: flutter pub get
+      - name: Unit/widget tests
+        working-directory: apps/mobile
+        run: flutter test
+      - name: Build debug APK for installation
+        working-directory: apps/mobile
+        run: flutter build apk --debug
+      - name: Publish APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: arevik-android-debug-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
