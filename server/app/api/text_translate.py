@@ -3,7 +3,8 @@
 Do not expose without authentication and transport protection.
 """
 from __future__ import annotations
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from app.auth import require_user
 from pydantic import BaseModel, Field
 from app.ai.quality_gateway import translate_text
 from app.config import settings
@@ -16,7 +17,7 @@ class TextTranslationRequest(BaseModel):
     target_language: str
 
 @router.post("/translate/text")
-def translate_text_endpoint(payload: TextTranslationRequest):
+def translate_text_endpoint(payload: TextTranslationRequest, user_id: int = Depends(require_user)):
     if settings.translation_engine != "ct2_quality":
         raise HTTPException(status_code=404, detail="Experimental translation disabled")
     if payload.source_language not in {"en", "hy", "fa"} or payload.target_language not in {"en", "hy", "fa"} or payload.source_language == payload.target_language:
