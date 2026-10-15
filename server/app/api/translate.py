@@ -11,6 +11,9 @@ from fastapi.concurrency import run_in_threadpool
 from app.ai.pipeline import pipeline
 from app.config import settings
 
+MAX_UPLOAD_BYTES = 15 * 1024 * 1024
+UPLOAD_CHUNK_BYTES = 1024 * 1024
+
 router = APIRouter(prefix="/api/v1/translate", tags=["Translation"])
 
 
@@ -33,8 +36,15 @@ async def translate_file(
     output_path = request_dir / "translated.wav"
 
     try:
+        received = 0
         with input_path.open("wb") as destination:
-            shutil.copyfileobj(file.file, destination)
+            while chunk := await file.read(UPLOAD_CHUNK_BYTES):
+                received += len(chunk)
+                if received > MAX_UPLOAD_BYTES:
+                    raise HTTPException(status_code=413, detail="Audio file exceeds 15 MiB limit")
+                destination.write(chunk)
+        if received == 0:
+            raise HTTPException(status_code=400, detail="Empty audio file")
 
         result = await run_in_threadpool(
             pipeline.run,
@@ -58,3 +68,4 @@ async def translate_file(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     finally:
         await file.close()
+        shutil.rmtree(request_dir, ignore_errors=True)
